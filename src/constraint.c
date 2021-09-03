@@ -510,6 +510,16 @@ Constraint *create_with_side_effect_constraint(void (*callback)(void *), void *d
     return constraint;
 }
 
+Constraint *create_stub_constraint(void (*callback)(void *)) {
+    Constraint* constraint = create_constraint();
+    constraint->type = CGREEN_STUB_CONSTRAINT;
+
+    constraint->name = "stub function";
+    constraint->stub_function_callback = callback;
+
+    return constraint;
+}
+
 bool compare_want_value(Constraint *constraint, CgreenValue actual) {
     return constraint->expected_value.value.integer_value == actual.value.integer_value;
 }
@@ -586,7 +596,6 @@ static void execute_sideeffect(Constraint *constraint, const char *function, Cgr
     }
     (constraint->side_effect_callback)(constraint->side_effect_data);
 }
-
 
 void test_want(Constraint *constraint, const char *function, CgreenValue actual,
                const char *test_file, int test_line, TestReporter *reporter) {

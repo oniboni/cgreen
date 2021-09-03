@@ -20,6 +20,22 @@ namespace cgreen {
     extern "C" {
 #endif
 
+typedef struct RecordedExpectation_ {
+    const char *function;
+    const char *test_file;
+    int test_line;
+    int time_to_live;
+    CgreenVector *constraints;
+    int number_times_called;
+    /*
+     * Used to record the number of time this particular expectation was triggered.
+     * The main use at this point is to ensure that never_expect only adds itself
+     * as a successful test if it as never been called
+     */
+    int times_triggered;
+} RecordedExpectation;
+
+
 extern void expect_(TestReporter *test_reporter, const char *function, const char *test_file, int test_line, ...);
 extern void always_expect_(TestReporter *test_reporter, const char *function, const char *test_file, int test_line,
                            ...);

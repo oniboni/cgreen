@@ -67,6 +67,7 @@ set(cgreen_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/reporter.c
   ${CMAKE_CURRENT_SOURCE_DIR}/runner.c
   ${CMAKE_CURRENT_SOURCE_DIR}/string_comparison.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/stub.c
   ${CMAKE_CURRENT_SOURCE_DIR}/suite.c
   ${CMAKE_CURRENT_SOURCE_DIR}/text_reporter.c
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.c

@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <cgreen/breadcrumb.h>
 #include <cgreen/mocks.h>
+#include <cgreen/internal/mocks_internal.h>
 #include <cgreen/boxed_double.h>
 #include <inttypes.h>
 // TODO: report PC-Lint bug about undeserved 451
@@ -14,26 +15,12 @@
 #include "parameters.h"
 #include "constraint_internal.h"
 #include "utils.h"
+#include "stub.h"
 
 
 #ifdef __ANDROID__
 #include "cgreen/internal/android_headers/androidcompat.h"
 #endif // #ifdef __ANDROID__
-
-typedef struct RecordedExpectation_ {
-    const char *function;
-    const char *test_file;
-    int test_line;
-    int time_to_live;
-    CgreenVector *constraints;
-    int number_times_called;
-    /*
-     * Used to record the number of time this particular expectation was triggered.
-     * The main use at this point is to ensure that never_expect only adds itself
-     * as a successful test if it as never been called
-     */
-    int times_triggered;
-} RecordedExpectation;
 
 const int UNLIMITED_TIME_TO_LIVE = 0x0f314159;
 
@@ -77,6 +64,7 @@ static void report_unexpected_call(TestReporter*, RecordedExpectation*);
 static void report_mock_parameter_name_not_found(TestReporter *test_reporter,
                                                  RecordedExpectation *expectation,
                                                  const char *parameter);
+static void report_error(TestReporter *test_reporter, RecordedExpectation *expectation, const char* err_msg);
 static void destroy_expectation_if_time_to_die(RecordedExpectation *expectation);
 
 static bool is_side_effect_constraint(const Constraint *constraint);
@@ -190,6 +178,8 @@ intptr_t mock_(TestReporter* test_reporter, const char *function, const char *mo
     int i;
     CgreenValue stored_result;
     RecordedExpectation *expectation = find_expectation(function);
+    void (*stored_stub_function_callback)(void *) = NULL;
+    void *stored_stub_result = NULL;
 
     parameter_names = create_vector_of_names(parameters);
 
@@ -247,6 +237,9 @@ intptr_t mock_(TestReporter* test_reporter, const char *function, const char *mo
 
             return stored_result.value.integer_value;
         }
+
+        if (constraint->type == CGREEN_STUB_CONSTRAINT)
+            stored_stub_function_callback = constraint->stub_function_callback;
     }
 
     // if read-only constraints aren't matching, content-setting ones might corrupt memory
@@ -272,11 +265,17 @@ intptr_t mock_(TestReporter* test_reporter, const char *function, const char *mo
         }
     }
 
+    if (stored_stub_function_callback != NULL)
+        stored_stub_result = do_stub(test_reporter, expectation, stored_stub_function_callback, actual_values);
+
     destroy_cgreen_vector(parameter_names);
     destroy_cgreen_vector(actual_values);
 
     expectation->times_triggered++;
     destroy_expectation_if_time_to_die(expectation);
+
+    if (stored_stub_result != NULL)
+        return stored_stub_result;
 
     if (stored_result.type == CGREEN_DOUBLE) {
 #ifdef FUTURE

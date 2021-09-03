@@ -1,0 +1,20 @@
+{
+    "files.associations": {
+        "message_formatting.h": "c",
+        "constraint.h": "c",
+        "*.tcc": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "fstream": "c",
+        "functional": "c",
+        "limits": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "optional": "c",
+        "mocks.h": "c",
+        "constraint_internal.h": "c",
+        "reporter.h": "c",
+        "cgreen_value.h": "c",
+        "mocks_internal.h": "c"
+    }
+}
